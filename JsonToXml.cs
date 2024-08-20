@@ -9,14 +9,11 @@ using Azure.Security.KeyVault.Secrets;
 using Azure.Storage.Blobs;
 using Azure.Identity;
 using Microsoft.Extensions.Configuration;
-using System.Configuration;
 
 namespace YourNamespace
 {
     public class JsonToXml
     {
-        public bool connectionString { get; set; }
-
         [FunctionName("JsonToXml")]
         public void Run([BlobTrigger("jsonfiles/{name}")] Stream myBlob, string name, ILogger log, IConfiguration configuration)
         {
@@ -24,7 +21,12 @@ namespace YourNamespace
 
             try
             {
-                getKeyVaultInfo(configuration);
+                // Retrieve connection string from Key Vault
+                var keyVaultUri = configuration["AzureKeyVaultUrl"];
+                var secretClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
+                var secret = secretClient.GetSecret("StorageConnectionString");
+                var connectionString = secret.Value;
+
                 // Create a BlobServiceClient using the retrieved connection string
                 BlobServiceClient blobServiceClient = new BlobServiceClient(Convert.ToString(connectionString));
 
@@ -45,16 +47,6 @@ namespace YourNamespace
             {
                 log.LogError($"Error converting JSON to XML: {ex.Message}");
             }
-        }
-
-        public KeyVaultSecret getKeyVaultInfo(IConfiguration configuration)
-        {
-            // Retrieve connection string from Key Vault
-            var keyVaultUri = configuration["AzureKeyVaultUrl"];
-            var secretClient = new SecretClient(new Uri(keyVaultUri), new DefaultAzureCredential());
-            var secret = secretClient.GetSecret("StorageConnectionString");
-            var connectionString = secret.Value;
-            return connectionString;
         }
     }
 }
