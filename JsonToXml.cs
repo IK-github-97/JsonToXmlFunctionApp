@@ -9,13 +9,14 @@ using Azure.Security.KeyVault.Secrets;
 using Azure.Storage.Blobs;
 using Azure.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Azure.Functions.Worker;
 
 namespace YourNamespace
 {
     public class JsonToXml
     {
-        [FunctionName("JsonToXml")]
-        public void Run([BlobTrigger("jsonfiles/{name}")] Stream myBlob, string name, ILogger log, IConfiguration configuration)
+        [Function("JsonToXml")]
+        public void Run([Microsoft.Azure.Functions.Worker.BlobTrigger("jsonfiles/{name}")] Stream myBlob, string name, ILogger log, IConfiguration configuration)
         {
             log.LogInformation($"C# Blob trigger function Processed blob\n Name:{name} \n Size: {myBlob.Length} Bytes");
 
